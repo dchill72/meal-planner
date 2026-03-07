@@ -1,0 +1,24 @@
+# Copy this file to .envrc and fill in the values.
+# .envrc is gitignored and loaded automatically by direnv.
+
+# ── Google OAuth ──────────────────────────────────────────────────────────────
+# Create credentials at https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+
+# ── MongoDB ───────────────────────────────────────────────────────────────────
+# Root admin credentials (used by docker-compose to initialise the database)
+MONGO_ROOT_USER=root
+MONGO_ROOT_PASSWORD=changeme
+
+# Service account used by the API to connect to the mealplanner database.
+# Must match the user created by docker-entrypoint-initdb.d/mongo-init.js
+MONGO_SERVICE_USER=service
+MONGO_SERVICE_PASSWORD=changeme
+
+# ── API ───────────────────────────────────────────────────────────────────────
+# A long, random secret used to sign session cookies.
+# Generate one with: openssl rand -hex 32
+SESSION_SECRET=changeme-replace-with-random-string
+
+# Origin that the API allows CORS requests from (the client URL).
+CORS_ORIGIN=http://localhost:5173

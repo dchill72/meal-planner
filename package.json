@@ -1,0 +1,22 @@
+{
+  "name": "meal-planner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker:build:api": "docker build -t api ./api-go",
+    "docker:build:client": "docker build -t client ./client",
+    "docker:builds": "npm run docker:build:api && npm run docker:build:client",
+    "docker:all:up": "docker-compose up --detach",
+    "docker:all:dn": "docker-compose down",
+    "docker:mongo:up": "docker-compose up --detach mongo",
+    "docker:mongo:dn": "docker-compose stop mongo"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "prettier": "^2.7.1"
+  }
+}

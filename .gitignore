@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Go
+api-go/server
+api-go/vendor/
+
+# Environment files
+.envrc
+.env
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+
+# Build output
+client/build/
+
+# Docker
+docker-compose.mongodb.yml
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

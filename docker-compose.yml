@@ -1,0 +1,44 @@
+volumes:
+  mongo_data:
+
+services:
+  mongo:
+    restart: unless-stopped
+    image: mongo:7.0
+    ports:
+      - 27017:27017
+    command: [--auth]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: root-db
+      MONGO_SERVICE_USER: ${MONGO_SERVICE_USER}
+      MONGO_SERVICE_PASSWORD: ${MONGO_SERVICE_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+      - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  api:
+    restart: unless-stopped
+    build: ./api-go
+    ports:
+      - 8000:8000
+    depends_on:
+      - mongo
+    environment:
+      - PORT=8000
+      - MONGODB_URL=mongodb://${MONGO_SERVICE_USER}:${MONGO_SERVICE_PASSWORD}@mongo:27017/mealplanner
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
+
+  client:
+    restart: unless-stopped
+    build: ./client
+    ports:
+      - 5173:5173
+    depends_on:
+      - api
+    environment:
+      - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+    command: npm run start
