@@ -160,3 +160,43 @@ Verify the connection:
 claude mcp list
 claude mcp get meal-planner
 ```
+
+### Adding recipes and ingredients
+
+Once the MCP is running you can either print recipes to local PDF (for those behind authentication) or just provide the public URL
+to your agent of choice (I'm using claude).
+
+Example output:
+
+```sh
+● Done! Bourbon Chicken is fully set up with all 12 ingredients:
+                                                                                                                                                                              
+  ┌────────────────┬─────────┬───────────────────┐
+  │   Ingredient   │ Amount  │       Notes       │                                                                                                                            
+  ├────────────────┼─────────┼───────────────────┤
+  │ Soy Sauce      │ ½ cup   │                   │                                                                                                                            
+  ├────────────────┼─────────┼───────────────────┤
+  │ Brown Sugar    │ ½ cup   │ Light variation   │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Water          │ ¼ cup   │                   │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Bourbon        │ 2 tbsp  │                   │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Sesame Oil     │ 1 tsp   │ Toasted           │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Pepper         │ ½ tsp   │ Black             │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Chicken Thighs │ 2 lb    │ Boneless Skinless │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Cornstarch     │ 2 tbsp  │                   │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Vegetable Oil  │ 2 tbsp  │                   │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Garlic         │ 2 count │                   │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Ginger         │ 1 tsp   │ Fresh             │
+  ├────────────────┼─────────┼───────────────────┤
+  │ Cider Vinegar  │ 2 tsp   │                   │
+  └────────────────┴─────────┴───────────────────┘
+
+  The whole process — PDF → 11 new ingredients → dish → 12 ingredient links — was fully automated in 3 parallel batches. Want to try another recipe?
