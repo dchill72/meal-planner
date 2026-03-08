@@ -51,6 +51,7 @@ func main() {
 	r.HandleFunc("/menus/{id}/entries", app.AddMenuEntry).Methods("POST")
 	r.HandleFunc("/menus/{id}/entries/{entryId}", app.UpdateMenuEntry).Methods("PUT")
 	r.HandleFunc("/menus/{id}/entries/{entryId}", app.RemoveMenuEntry).Methods("DELETE")
+	r.HandleFunc("/menus/{id}/grocery-list", app.GetGroceryList).Methods("GET")
 
 	r.HandleFunc("/ingredients", app.GetIngredients).Methods("GET")
 	r.HandleFunc("/ingredients", app.CreateIngredient).Methods("POST")

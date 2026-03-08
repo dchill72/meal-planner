@@ -56,8 +56,10 @@ Derived from a menu. All ingredients across all dishes across all meals are aggr
 | Meals — CRUD | ✅ | ✅ |
 | Menus — CRUD | ✅ | ✅ |
 | Menu entries (date, headcount, cook) | ✅ | ✅ |
-| Menu calendar view | ⬜ | ✅ |
-| Grocery list generation | ⬜ | ⬜ |
+| Menu calendar view | ✅ | ✅ |
+| Grocery list generation | ✅ | ✅ |
+| Grocery list printing | ⬜ | ⬜ |
+| MCP server | ⬜ | ⬜ |
 
 ---
 
