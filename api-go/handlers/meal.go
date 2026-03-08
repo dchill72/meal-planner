@@ -6,15 +6,15 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	
 	"meal-planner-api/db"
 )
 
 type Meal struct {
-	ID      primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
+	ID      bson.ObjectID   `json:"id" bson:"_id,omitempty"`
 	Name    string               `json:"name" bson:"name"`
-	DishIDs []primitive.ObjectID `json:"dishIds" bson:"dishIds"`
+	DishIDs []bson.ObjectID `json:"dishIds" bson:"dishIds"`
 }
 
 // GetMeals handles GET /meals
@@ -60,9 +60,9 @@ func (a *App) CreateMeal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	meal := Meal{
-		ID:      primitive.NewObjectID(),
+		ID:      bson.NewObjectID(),
 		Name:    body.Name,
-		DishIDs: []primitive.ObjectID{},
+		DishIDs: []bson.ObjectID{},
 	}
 
 	database, err := db.GetDB()
@@ -84,7 +84,7 @@ func (a *App) CreateMeal(w http.ResponseWriter, r *http.Request) {
 // UpdateMeal handles PUT /meals/{id} — body: {name}
 func (a *App) UpdateMeal(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
@@ -124,7 +124,7 @@ func (a *App) UpdateMeal(w http.ResponseWriter, r *http.Request) {
 // DeleteMeal handles DELETE /meals/{id}
 func (a *App) DeleteMeal(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
@@ -147,7 +147,7 @@ func (a *App) DeleteMeal(w http.ResponseWriter, r *http.Request) {
 // AddMealDish handles POST /meals/{id}/dishes — body: {dishId}
 func (a *App) AddMealDish(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	mealID, err := primitive.ObjectIDFromHex(id)
+	mealID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid meal id", http.StatusBadRequest)
 		return
@@ -161,7 +161,7 @@ func (a *App) AddMealDish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dishID, err := primitive.ObjectIDFromHex(body.DishID)
+	dishID, err := bson.ObjectIDFromHex(body.DishID)
 	if err != nil {
 		http.Error(w, "invalid dishId", http.StatusBadRequest)
 		return
@@ -189,12 +189,12 @@ func (a *App) AddMealDish(w http.ResponseWriter, r *http.Request) {
 // RemoveMealDish handles DELETE /meals/{id}/dishes/{dishId}
 func (a *App) RemoveMealDish(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	mealID, err := primitive.ObjectIDFromHex(vars["id"])
+	mealID, err := bson.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		http.Error(w, "invalid meal id", http.StatusBadRequest)
 		return
 	}
-	dishID, err := primitive.ObjectIDFromHex(vars["dishId"])
+	dishID, err := bson.ObjectIDFromHex(vars["dishId"])
 	if err != nil {
 		http.Error(w, "invalid dish id", http.StatusBadRequest)
 		return

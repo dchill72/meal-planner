@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	
 	"meal-planner-api/db"
 )
 
@@ -30,7 +30,7 @@ const (
 )
 
 type Ingredient struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	ID          bson.ObjectID `json:"id" bson:"_id,omitempty"`
 	Description string             `json:"description" bson:"description"`
 	Variations  []string           `json:"variations" bson:"variations"`
 	StoreArea   StoreArea          `json:"storeArea" bson:"storeArea"`
@@ -84,7 +84,7 @@ func (a *App) CreateIngredient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ingredient := Ingredient{
-		ID:          primitive.NewObjectID(),
+		ID:          bson.NewObjectID(),
 		Description: body.Description,
 		Variations:  body.Variations,
 		StoreArea:   body.StoreArea,
@@ -109,7 +109,7 @@ func (a *App) CreateIngredient(w http.ResponseWriter, r *http.Request) {
 // UpdateIngredient handles PUT /ingredients/{id} — body: {description, variations?, storeArea?}
 func (a *App) UpdateIngredient(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
@@ -158,7 +158,7 @@ func (a *App) UpdateIngredient(w http.ResponseWriter, r *http.Request) {
 // DeleteIngredient handles DELETE /ingredients/{id}
 func (a *App) DeleteIngredient(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return

@@ -6,23 +6,23 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	
 	"meal-planner-api/db"
 )
 
 // MenuEntry is a single scheduled meal within a Menu.
 // Date is stored as an ISO-8601 date string (YYYY-MM-DD).
 type MenuEntry struct {
-	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	MealID    primitive.ObjectID `json:"mealId" bson:"mealId"`
+	ID        bson.ObjectID `json:"id" bson:"_id,omitempty"`
+	MealID    bson.ObjectID `json:"mealId" bson:"mealId"`
 	Date      string             `json:"date" bson:"date"`
 	Headcount int                `json:"headcount" bson:"headcount"`
 	Cook      string             `json:"cook" bson:"cook"`
 }
 
 type Menu struct {
-	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	ID        bson.ObjectID `json:"id" bson:"_id,omitempty"`
 	Name      string             `json:"name" bson:"name"`
 	StartDate string             `json:"startDate" bson:"startDate"`
 	EndDate   string             `json:"endDate" bson:"endDate"`
@@ -74,7 +74,7 @@ func (a *App) CreateMenu(w http.ResponseWriter, r *http.Request) {
 	}
 
 	menu := Menu{
-		ID:        primitive.NewObjectID(),
+		ID:        bson.NewObjectID(),
 		Name:      body.Name,
 		StartDate: body.StartDate,
 		EndDate:   body.EndDate,
@@ -100,7 +100,7 @@ func (a *App) CreateMenu(w http.ResponseWriter, r *http.Request) {
 // UpdateMenu handles PUT /menus/{id} — body: {name, startDate, endDate}
 func (a *App) UpdateMenu(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
@@ -142,7 +142,7 @@ func (a *App) UpdateMenu(w http.ResponseWriter, r *http.Request) {
 // DeleteMenu handles DELETE /menus/{id}
 func (a *App) DeleteMenu(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
@@ -165,7 +165,7 @@ func (a *App) DeleteMenu(w http.ResponseWriter, r *http.Request) {
 // AddMenuEntry handles POST /menus/{id}/entries — body: {mealId, date, headcount, cook}
 func (a *App) AddMenuEntry(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	menuID, err := primitive.ObjectIDFromHex(id)
+	menuID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid menu id", http.StatusBadRequest)
 		return
@@ -182,7 +182,7 @@ func (a *App) AddMenuEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mealID, err := primitive.ObjectIDFromHex(body.MealID)
+	mealID, err := bson.ObjectIDFromHex(body.MealID)
 	if err != nil {
 		http.Error(w, "invalid mealId", http.StatusBadRequest)
 		return
@@ -193,7 +193,7 @@ func (a *App) AddMenuEntry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	entry := MenuEntry{
-		ID:        primitive.NewObjectID(),
+		ID:        bson.NewObjectID(),
 		MealID:    mealID,
 		Date:      body.Date,
 		Headcount: body.Headcount,
@@ -224,12 +224,12 @@ func (a *App) AddMenuEntry(w http.ResponseWriter, r *http.Request) {
 // UpdateMenuEntry handles PUT /menus/{id}/entries/{entryId} — body: {mealId, date, headcount, cook}
 func (a *App) UpdateMenuEntry(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	menuID, err := primitive.ObjectIDFromHex(vars["id"])
+	menuID, err := bson.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		http.Error(w, "invalid menu id", http.StatusBadRequest)
 		return
 	}
-	entryID, err := primitive.ObjectIDFromHex(vars["entryId"])
+	entryID, err := bson.ObjectIDFromHex(vars["entryId"])
 	if err != nil {
 		http.Error(w, "invalid entry id", http.StatusBadRequest)
 		return
@@ -246,7 +246,7 @@ func (a *App) UpdateMenuEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mealID, err := primitive.ObjectIDFromHex(body.MealID)
+	mealID, err := bson.ObjectIDFromHex(body.MealID)
 	if err != nil {
 		http.Error(w, "invalid mealId", http.StatusBadRequest)
 		return
@@ -283,12 +283,12 @@ func (a *App) UpdateMenuEntry(w http.ResponseWriter, r *http.Request) {
 // RemoveMenuEntry handles DELETE /menus/{id}/entries/{entryId}
 func (a *App) RemoveMenuEntry(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	menuID, err := primitive.ObjectIDFromHex(vars["id"])
+	menuID, err := bson.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		http.Error(w, "invalid menu id", http.StatusBadRequest)
 		return
 	}
-	entryID, err := primitive.ObjectIDFromHex(vars["entryId"])
+	entryID, err := bson.ObjectIDFromHex(vars["entryId"])
 	if err != nil {
 		http.Error(w, "invalid entry id", http.StatusBadRequest)
 		return

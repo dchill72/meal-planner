@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	
 	"meal-planner-api/db"
 )
 
@@ -23,7 +23,7 @@ type GroceryLine struct {
 
 // aggregation key: ingredientId::variation::measure
 type aggKey struct {
-	IngredientID primitive.ObjectID
+	IngredientID bson.ObjectID
 	Variation    string
 	Measure      string
 }
@@ -39,7 +39,7 @@ type aggKey struct {
 //  6. Returns a flat list sorted by store area
 func (a *App) GetGroceryList(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	menuID, err := primitive.ObjectIDFromHex(id)
+	menuID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid menu id", http.StatusBadRequest)
 		return
@@ -65,11 +65,11 @@ func (a *App) GetGroceryList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Collect unique meal IDs and dish IDs
-	mealIDSet := map[primitive.ObjectID]struct{}{}
+	mealIDSet := map[bson.ObjectID]struct{}{}
 	for _, entry := range menu.Entries {
 		mealIDSet[entry.MealID] = struct{}{}
 	}
-	mealIDList := make([]primitive.ObjectID, 0, len(mealIDSet))
+	mealIDList := make([]bson.ObjectID, 0, len(mealIDSet))
 	for id := range mealIDSet {
 		mealIDList = append(mealIDList, id)
 	}
@@ -86,8 +86,8 @@ func (a *App) GetGroceryList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	mealByID := map[primitive.ObjectID]*Meal{}
-	dishIDSet := map[primitive.ObjectID]struct{}{}
+	mealByID := map[bson.ObjectID]*Meal{}
+	dishIDSet := map[bson.ObjectID]struct{}{}
 	for i := range meals {
 		mealByID[meals[i].ID] = &meals[i]
 		for _, dishID := range meals[i].DishIDs {
@@ -96,7 +96,7 @@ func (a *App) GetGroceryList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. Load dishes
-	dishIDList := make([]primitive.ObjectID, 0, len(dishIDSet))
+	dishIDList := make([]bson.ObjectID, 0, len(dishIDSet))
 	for id := range dishIDSet {
 		dishIDList = append(dishIDList, id)
 	}
@@ -111,8 +111,8 @@ func (a *App) GetGroceryList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	dishByID := map[primitive.ObjectID]*Dish{}
-	ingIDSet := map[primitive.ObjectID]struct{}{}
+	dishByID := map[bson.ObjectID]*Dish{}
+	ingIDSet := map[bson.ObjectID]struct{}{}
 	for i := range dishes {
 		dishByID[dishes[i].ID] = &dishes[i]
 		for _, ing := range dishes[i].Ingredients {
@@ -121,7 +121,7 @@ func (a *App) GetGroceryList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 5. Load ingredients
-	ingIDList := make([]primitive.ObjectID, 0, len(ingIDSet))
+	ingIDList := make([]bson.ObjectID, 0, len(ingIDSet))
 	for id := range ingIDSet {
 		ingIDList = append(ingIDList, id)
 	}
@@ -136,7 +136,7 @@ func (a *App) GetGroceryList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ingByID := map[primitive.ObjectID]*Ingredient{}
+	ingByID := map[bson.ObjectID]*Ingredient{}
 	for i := range ingredients {
 		ingByID[ingredients[i].ID] = &ingredients[i]
 	}

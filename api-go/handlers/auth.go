@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"google.golang.org/api/idtoken"
 	"meal-planner-api/db"
 )
@@ -27,7 +27,7 @@ func (a *App) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := a.Store.Get(r, sessionName)
 		if userID, ok := session.Values["userId"].(string); ok && userID != "" {
-			objID, err := primitive.ObjectIDFromHex(userID)
+			objID, err := bson.ObjectIDFromHex(userID)
 			if err == nil {
 				database, err := db.GetDB()
 				if err == nil {
@@ -89,7 +89,7 @@ func (a *App) GoogleAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	objID, ok := user["_id"].(primitive.ObjectID)
+	objID, ok := user["_id"].(bson.ObjectID)
 	if !ok {
 		http.Error(w, "invalid user id", http.StatusInternalServerError)
 		return

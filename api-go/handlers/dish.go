@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	
 	"meal-planner-api/db"
 )
 
@@ -40,15 +40,15 @@ const (
 // Variation is optional — it records which variant of the ingredient is used
 // (e.g. "Salted" for Butter), matching a value from Ingredient.Variations.
 type DishIngredient struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	IngredientID primitive.ObjectID `json:"ingredientId" bson:"ingredientId"`
+	ID           bson.ObjectID `json:"id" bson:"_id,omitempty"`
+	IngredientID bson.ObjectID `json:"ingredientId" bson:"ingredientId"`
 	Variation    string             `json:"variation" bson:"variation"`
 	Amount       float64            `json:"amount" bson:"amount"`
 	Measure      Measure            `json:"measure" bson:"measure"`
 }
 
 type Dish struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	ID           bson.ObjectID `json:"id" bson:"_id,omitempty"`
 	Name         string             `json:"name" bson:"name"`
 	Serves       int                `json:"serves" bson:"serves"`
 	Instructions string             `json:"instructions" bson:"instructions"`
@@ -102,7 +102,7 @@ func (a *App) CreateDish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dish := Dish{
-		ID:           primitive.NewObjectID(),
+		ID:           bson.NewObjectID(),
 		Name:         body.Name,
 		Serves:       body.Serves,
 		Instructions: body.Instructions,
@@ -129,7 +129,7 @@ func (a *App) CreateDish(w http.ResponseWriter, r *http.Request) {
 // UpdateDish handles PUT /dishes/{id} — body: {name, serves?, instructions?, source?}
 func (a *App) UpdateDish(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
@@ -172,7 +172,7 @@ func (a *App) UpdateDish(w http.ResponseWriter, r *http.Request) {
 // DeleteDish handles DELETE /dishes/{id}
 func (a *App) DeleteDish(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
@@ -195,7 +195,7 @@ func (a *App) DeleteDish(w http.ResponseWriter, r *http.Request) {
 // AddDishIngredient handles POST /dishes/{id}/ingredients — body: {ingredientId, amount, measure}
 func (a *App) AddDishIngredient(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	dishID, err := primitive.ObjectIDFromHex(id)
+	dishID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "invalid dish id", http.StatusBadRequest)
 		return
@@ -212,7 +212,7 @@ func (a *App) AddDishIngredient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ingredientID, err := primitive.ObjectIDFromHex(body.IngredientID)
+	ingredientID, err := bson.ObjectIDFromHex(body.IngredientID)
 	if err != nil {
 		http.Error(w, "invalid ingredientId", http.StatusBadRequest)
 		return
@@ -227,7 +227,7 @@ func (a *App) AddDishIngredient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	entry := DishIngredient{
-		ID:           primitive.NewObjectID(),
+		ID:           bson.NewObjectID(),
 		IngredientID: ingredientID,
 		Variation:    body.Variation,
 		Amount:       body.Amount,
@@ -258,12 +258,12 @@ func (a *App) AddDishIngredient(w http.ResponseWriter, r *http.Request) {
 // RemoveDishIngredient handles DELETE /dishes/{id}/ingredients/{entryId}
 func (a *App) RemoveDishIngredient(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	dishID, err := primitive.ObjectIDFromHex(vars["id"])
+	dishID, err := bson.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		http.Error(w, "invalid dish id", http.StatusBadRequest)
 		return
 	}
-	entryID, err := primitive.ObjectIDFromHex(vars["entryId"])
+	entryID, err := bson.ObjectIDFromHex(vars["entryId"])
 	if err != nil {
 		http.Error(w, "invalid entry id", http.StatusBadRequest)
 		return

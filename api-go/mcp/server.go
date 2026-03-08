@@ -10,8 +10,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	
 	"meal-planner-api/db"
 	"meal-planner-api/handlers"
 )
@@ -142,7 +142,7 @@ func handleCreateIngredient(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	storeArea := handlers.StoreArea(req.GetString("storeArea", ""))
 
 	ingredient := handlers.Ingredient{
-		ID:          primitive.NewObjectID(),
+		ID:          bson.NewObjectID(),
 		Description: description,
 		Variations:  variations,
 		StoreArea:   storeArea,
@@ -163,7 +163,7 @@ func handleUpdateIngredient(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return mcp.NewToolResultError("invalid id"), nil
 	}
@@ -321,7 +321,7 @@ func handleCreateDish(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallTo
 	serves := int(req.GetFloat("serves", 0))
 
 	dish := handlers.Dish{
-		ID:           primitive.NewObjectID(),
+		ID:           bson.NewObjectID(),
 		Name:         name,
 		Serves:       serves,
 		Instructions: req.GetString("instructions", ""),
@@ -344,7 +344,7 @@ func handleUpdateDish(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return mcp.NewToolResultError("invalid id"), nil
 	}
@@ -378,7 +378,7 @@ func handleAddDishIngredient(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	dishObjID, err := primitive.ObjectIDFromHex(dishID)
+	dishObjID, err := bson.ObjectIDFromHex(dishID)
 	if err != nil {
 		return mcp.NewToolResultError("invalid dishId"), nil
 	}
@@ -387,7 +387,7 @@ func handleAddDishIngredient(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	ingObjID, err := primitive.ObjectIDFromHex(ingredientID)
+	ingObjID, err := bson.ObjectIDFromHex(ingredientID)
 	if err != nil {
 		return mcp.NewToolResultError("invalid ingredientId"), nil
 	}
@@ -402,7 +402,7 @@ func handleAddDishIngredient(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	}
 
 	entry := handlers.DishIngredient{
-		ID:           primitive.NewObjectID(),
+		ID:           bson.NewObjectID(),
 		IngredientID: ingObjID,
 		Variation:    req.GetString("variation", ""),
 		Amount:       amount,
@@ -429,7 +429,7 @@ func handleRemoveDishIngredient(ctx context.Context, req mcp.CallToolRequest) (*
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	dishObjID, err := primitive.ObjectIDFromHex(dishID)
+	dishObjID, err := bson.ObjectIDFromHex(dishID)
 	if err != nil {
 		return mcp.NewToolResultError("invalid dishId"), nil
 	}
@@ -438,7 +438,7 @@ func handleRemoveDishIngredient(ctx context.Context, req mcp.CallToolRequest) (*
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	entryObjID, err := primitive.ObjectIDFromHex(entryID)
+	entryObjID, err := bson.ObjectIDFromHex(entryID)
 	if err != nil {
 		return mcp.NewToolResultError("invalid entryId"), nil
 	}
