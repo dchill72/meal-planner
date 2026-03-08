@@ -5,7 +5,7 @@
         docker-up docker-down docker-mongo-up docker-mongo-down \
         help
 
-COMPOSE = docker-compose
+COMPOSE = env $(shell sed 's/^export //' .envrc | grep -v '^\#' | grep '=') docker-compose
 
 # ─── Top-level aliases ────────────────────────────────────────────────────────
 
@@ -57,10 +57,10 @@ client-test:
 docker-build: docker-api-build docker-client-build
 
 docker-api-build:
-	docker buildx build -t api ./api-go
+	$(COMPOSE) build api
 
 docker-client-build:
-	docker buildx build -t client ./client
+	$(COMPOSE) build --no-cache client
 
 docker-up:
 	$(COMPOSE) up --detach
