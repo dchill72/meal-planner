@@ -8,6 +8,7 @@ export interface User {
   email: string;
   picture: string;
   theme?: PaletteMode;
+  mcpKey?: string;
 }
 
 interface AuthContextType {

@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
 	"meal-planner-api/config"
 	"meal-planner-api/db"
 	"meal-planner-api/handlers"
+	mcpserver "meal-planner-api/mcp"
 )
 
 func corsMiddleware(origin string, next http.Handler) http.Handler {
@@ -19,6 +23,32 @@ func corsMiddleware(origin string, next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// mcpAuthMiddleware rejects MCP requests whose Bearer token doesn't match any user's mcpKey.
+func mcpAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth := r.Header.Get("Authorization")
+		token := strings.TrimPrefix(auth, "Bearer ")
+		if token == "" || token == auth {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		database, err := db.GetDB()
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		count, err := database.Collection("auth").CountDocuments(
+			context.Background(),
+			bson.M{"mcpKey": token},
+		)
+		if err != nil || count == 0 {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -71,6 +101,11 @@ func main() {
 	r.HandleFunc("/meals/{id}", app.DeleteMeal).Methods("DELETE")
 	r.HandleFunc("/meals/{id}/dishes", app.AddMealDish).Methods("POST")
 	r.HandleFunc("/meals/{id}/dishes/{dishId}", app.RemoveMealDish).Methods("DELETE")
+
+	r.HandleFunc("/me/mcp-key", app.GenerateMCPKey).Methods("POST")
+
+	// MCP endpoint — protected by per-user API key, bypasses session auth
+	r.PathPrefix("/mcp").Handler(mcpAuthMiddleware(mcpserver.NewHandler()))
 
 	log.Printf("[server]: Server is running at http://localhost:%s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, corsMiddleware(cfg.CORSOrigin, r)))

@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 
@@ -17,6 +19,7 @@ type User struct {
 	Email   string `json:"email" bson:"email"`
 	Picture string `json:"picture" bson:"picture"`
 	Theme   string `json:"theme" bson:"theme"`
+	MCPKey  string `json:"mcpKey,omitempty" bson:"mcpKey,omitempty"`
 }
 
 // AuthMiddleware loads the current user from the session into the request context.
@@ -118,6 +121,40 @@ func (a *App) GetMe(w http.ResponseWriter, r *http.Request) {
 	user, _ := r.Context().Value(userContextKey).(*User)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+// GenerateMCPKey handles POST /me/mcp-key — generates a new random MCP API key for the user.
+func (a *App) GenerateMCPKey(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(userContextKey).(*User)
+	if !ok || user == nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	key := hex.EncodeToString(b)
+
+	database, err := db.GetDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_, err = database.Collection("auth").UpdateOne(
+		context.Background(),
+		bson.M{"email": user.Email},
+		bson.M{"$set": bson.M{"mcpKey": key}},
+	)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"mcpKey": key})
 }
 
 // UpdateMe handles PUT /me — updates the display name of the logged-in user.

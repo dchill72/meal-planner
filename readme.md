@@ -59,7 +59,7 @@ Derived from a menu. All ingredients across all dishes across all meals are aggr
 | Menu calendar view | ✅ | ✅ |
 | Grocery list generation | ✅ | ✅ |
 | Grocery list printing | ⬜ | ✅ |
-| MCP server | ⬜ | ⬜ |
+| MCP server | ✅ | ⬜ |
 
 ---
 
@@ -114,4 +114,49 @@ make help      # full command list
 ```bash
 docker exec -it meal-planner-mongo-1 mongosh mealplanner -u service -p <MONGO_SERVICE_PASSWORD>
 > show collections
+```
+
+---
+
+## MCP server
+
+The API exposes a [Model Context Protocol](https://modelcontextprotocol.io/) server at `/mcp` using Streamable HTTP transport. Its primary use case is recipe ingestion: an AI assistant can read a recipe, create any missing ingredients, create the dish, and attach ingredients with amounts — all via tool calls.
+
+**Authentication:** every request must include `Authorization: Bearer <key>`. Each user generates their own key from the **Profile** page in the app. Keys are stored per-user in the database — no shared secret or environment variable required.
+
+### Available tools
+
+| Tool | Description |
+|---|---|
+| `list_ingredients` | Return all ingredients (call before creating a dish to find existing IDs) |
+| `create_ingredient` | Create an ingredient (description, optional variations, optional store area) |
+| `update_ingredient` | Update an ingredient's description, variations, or store area |
+| `list_dishes` | Return all dishes with ingredient lists, instructions, and serving counts |
+| `create_dish` | Create a dish (name, serves, instructions, source URL) |
+| `update_dish` | Update a dish's name, serving count, instructions, or source URL |
+| `add_dish_ingredient` | Add an ingredient entry to a dish (ingredientId, amount, measure, optional variation) |
+| `remove_dish_ingredient` | Remove an ingredient entry from a dish |
+
+### Connecting Claude Code
+
+1. Go to **Profile** in the app and click **Generate MCP key** — your personal key is shown once.
+2. The Profile page displays the ready-to-run command. Copy and paste it, or run it yourself (replace `<key>` with your key):
+
+```bash
+# Against a remote deployment
+claude mcp add --transport http --scope user meal-planner https://<your-api-host>/mcp \
+  --header "Authorization: Bearer <key>"
+
+# Against the local dev API
+claude mcp add --transport http --scope user meal-planner http://localhost:8000/mcp \
+  --header "Authorization: Bearer <key>"
+```
+
+Each user has their own independent key. Clicking **Regenerate key** on the Profile page immediately invalidates the old key.
+
+Verify the connection:
+
+```bash
+claude mcp list
+claude mcp get meal-planner
 ```

@@ -22,3 +22,4 @@ SESSION_SECRET=changeme-replace-with-random-string
 
 # Origin that the API allows CORS requests from (the client URL).
 CORS_ORIGIN=http://localhost:5173
+
