@@ -200,3 +200,15 @@ Example output:
   └────────────────┴─────────┴───────────────────┘
 
   The whole process — PDF → 11 new ingredients → dish → 12 ingredient links — was fully automated in 3 parallel batches. Want to try another recipe?
+```
+
+### UI Examples
+
+#### Dashboard
+![Dashboard](./img/meal-planner-dashboard.png)
+
+#### Grocery List
+![Grocery List](./img/meal-planner-grocerylist.png)
+
+#### Profile
+![Profile](./img/meal-planner-profile.png)
