@@ -44,11 +44,13 @@ func main() {
 	r.HandleFunc("/me", app.GetMe).Methods("GET")
 	r.HandleFunc("/me", app.UpdateMe).Methods("PUT")
 
-	r.HandleFunc("/menu", app.GetMenuItems).Methods("GET")
-	r.HandleFunc("/menu", app.CreateMenuItem).Methods("POST")
-	r.HandleFunc("/menu/{id}", app.GetMenuItem).Methods("GET")
-	r.HandleFunc("/menu/{id}", app.UpdateMenuItem).Methods("PUT")
-	r.HandleFunc("/menu/{id}", app.DeleteMenuItem).Methods("DELETE")
+	r.HandleFunc("/menus", app.GetMenus).Methods("GET")
+	r.HandleFunc("/menus", app.CreateMenu).Methods("POST")
+	r.HandleFunc("/menus/{id}", app.UpdateMenu).Methods("PUT")
+	r.HandleFunc("/menus/{id}", app.DeleteMenu).Methods("DELETE")
+	r.HandleFunc("/menus/{id}/entries", app.AddMenuEntry).Methods("POST")
+	r.HandleFunc("/menus/{id}/entries/{entryId}", app.UpdateMenuEntry).Methods("PUT")
+	r.HandleFunc("/menus/{id}/entries/{entryId}", app.RemoveMenuEntry).Methods("DELETE")
 
 	r.HandleFunc("/ingredients", app.GetIngredients).Methods("GET")
 	r.HandleFunc("/ingredients", app.CreateIngredient).Methods("POST")

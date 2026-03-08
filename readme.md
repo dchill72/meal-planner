@@ -54,8 +54,8 @@ Derived from a menu. All ingredients across all dishes across all meals are aggr
 | Dish serving count | ✅ | ✅ |
 | Ingredient metadata (variations, store area) | ✅ | ✅ |
 | Meals — CRUD | ✅ | ✅ |
-| Menus — CRUD | ⬜ | ⬜ |
-| Menu entries (date, headcount, cook) | ⬜ | ⬜ |
+| Menus — CRUD | ✅ | ✅ |
+| Menu entries (date, headcount, cook) | ✅ | ✅ |
 | Menu calendar view | ⬜ | ⬜ |
 | Grocery list generation | ⬜ | ⬜ |
 
