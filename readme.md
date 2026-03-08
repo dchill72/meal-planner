@@ -23,16 +23,20 @@ A recipe. A dish has:
 Units of measure cover imperial volume (tsp, tbsp, fl oz, cup, pt, qt, gal), metric volume (ml, l), imperial weight (oz, lb), metric weight (g, kg), and discrete count (e.g. 3 eggs).
 
 ### Meal
-A set of dishes served together. A meal has:
+A reusable set of dishes served together — think of it as a named combination (e.g. "Sunday roast", "Taco night"). A meal has:
+- A **name**
 - A **list of dishes**
-- A **date**
-- A **headcount** (number of people eating)
-- A **cook** (the household member responsible)
 
-Dish quantities are scaled automatically based on the meal headcount vs. each dish's serving count.
+A meal carries no scheduling information on its own. Scheduling happens when a meal is placed on a menu.
 
 ### Menu
-A collection of meals over a period of time. A menu is the top-level planning unit.
+A menu covers a **date range** and is the top-level planning unit. It is displayed as a **calendar view**. A menu contains **menu entries**, each of which schedules a meal on a specific day and records:
+- The **meal** being served
+- The **date**
+- The **headcount** (number of people eating that day)
+- The **cook** (the household member responsible)
+
+Dish quantities are scaled automatically based on each entry's headcount vs. each dish's serving count.
 
 ### Grocery list
 Derived from a menu. All ingredients across all dishes across all meals are aggregated, quantities scaled to headcount, and grouped by grocery store area to make shopping efficient.
@@ -51,6 +55,8 @@ Derived from a menu. All ingredients across all dishes across all meals are aggr
 | Ingredient metadata (variations, store area) | ⬜ | ⬜ |
 | Meals — CRUD | ⬜ | ⬜ |
 | Menus — CRUD | ⬜ | ⬜ |
+| Menu entries (date, headcount, cook) | ⬜ | ⬜ |
+| Menu calendar view | ⬜ | ⬜ |
 | Grocery list generation | ⬜ | ⬜ |
 
 ---
