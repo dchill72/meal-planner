@@ -11,13 +11,18 @@ import {
   ListItem,
   ListItemText,
   MenuItem,
+  Paper,
   Select,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ListIcon from '@mui/icons-material/List';
 import {
   Menu,
   MenuEntry,
@@ -45,30 +50,164 @@ interface EntryForm {
 }
 
 const EMPTY_ENTRY_FORM: EntryForm = { mealId: '', date: '', headcount: '2', cook: '' };
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const TODAY = new Date().toISOString().slice(0, 10);
 
 const formatDate = (iso: string) => {
   if (!iso) return '';
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
+  const [, m, d] = iso.split('-');
+  return `${d}/${m}`;
+};
+
+// Returns YYYY-MM-DD string for a Date object in local time
+const toISO = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+// Returns the Monday on or before the given date
+const mondayBefore = (iso: string) => {
+  const d = new Date(iso + 'T00:00:00');
+  const dow = d.getDay(); // 0=Sun
+  const offset = dow === 0 ? 6 : dow - 1;
+  d.setDate(d.getDate() - offset);
+  return d;
+};
+
+// Returns the Sunday on or after the given date
+const sundayAfter = (iso: string) => {
+  const d = new Date(iso + 'T00:00:00');
+  const dow = d.getDay();
+  const offset = dow === 0 ? 0 : 7 - dow;
+  d.setDate(d.getDate() + offset);
+  return d;
+};
+
+// Builds a 2D array of ISO date strings: weeks × days (Mon–Sun)
+const buildWeeks = (startDate: string, endDate: string): string[][] => {
+  if (!startDate || !endDate) return [];
+  const start = mondayBefore(startDate);
+  const end = sundayAfter(endDate);
+  const weeks: string[][] = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    const week: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      week.push(toISO(new Date(cursor)));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    weeks.push(week);
+  }
+  return weeks;
+};
+
+interface MenuCalendarProps {
+  menu: Menu;
+  meals: Meal[];
+}
+
+const MenuCalendar = ({ menu, meals }: MenuCalendarProps) => {
+  const weeks = buildWeeks(menu.startDate, menu.endDate);
+  const entryByDate = new Map<string, MenuEntry>();
+  for (const e of menu.entries ?? []) entryByDate.set(e.date, e);
+  const mealById = (id: string) => meals.find((m) => m.id === id);
+
+  if (weeks.length === 0) {
+    return (
+      <Typography variant="body2" color="text.disabled">
+        Set a start and end date to see the calendar.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box sx={{ overflowX: 'auto' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: '1px',
+          bgcolor: 'divider',
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          overflow: 'hidden',
+          minWidth: 420,
+        }}
+      >
+        {/* Day headers */}
+        {DAY_LABELS.map((label) => (
+          <Box key={label} sx={{ bgcolor: 'background.paper', p: 0.5, textAlign: 'center' }}>
+            <Typography variant="caption" fontWeight={600} color="text.secondary">
+              {label}
+            </Typography>
+          </Box>
+        ))}
+
+        {/* Day cells */}
+        {weeks.flatMap((week) =>
+          week.map((iso) => {
+            const inRange = iso >= menu.startDate && iso <= menu.endDate;
+            const isToday = iso === TODAY;
+            const entry = entryByDate.get(iso);
+            const meal = entry ? mealById(entry.mealId) : undefined;
+
+            return (
+              <Paper
+                key={iso}
+                elevation={0}
+                square
+                sx={{
+                  p: 0.75,
+                  minHeight: 64,
+                  bgcolor: isToday
+                    ? 'primary.50'
+                    : inRange
+                    ? 'background.paper'
+                    : 'action.hover',
+                  opacity: inRange ? 1 : 0.4,
+                  borderTop: isToday ? '2px solid' : 'none',
+                  borderColor: 'primary.main',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{ fontWeight: isToday ? 700 : 400, color: isToday ? 'primary.main' : 'text.secondary' }}
+                >
+                  {iso.slice(8)} {/* day number */}
+                </Typography>
+                {meal && (
+                  <Typography variant="body2" sx={{ fontSize: '0.72rem', mt: 0.25, lineHeight: 1.3 }}>
+                    {meal.name}
+                  </Typography>
+                )}
+                {entry && entry.cook && (
+                  <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
+                    {entry.cook}
+                  </Typography>
+                )}
+              </Paper>
+            );
+          }),
+        )}
+      </Box>
+    </Box>
+  );
 };
 
 export const Menus = () => {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [meals, setMeals] = useState<Meal[]>([]);
 
-  // Create menu form
   const [newForm, setNewForm] = useState<MenuEditForm>({ name: '', startDate: '', endDate: '' });
-
-  // Edit menu
   const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
   const [editMenuForm, setEditMenuForm] = useState<MenuEditForm>({ name: '', startDate: '', endDate: '' });
-
-  // Add entry forms per menu
   const [addEntryForms, setAddEntryForms] = useState<Record<string, EntryForm>>({});
-
-  // Edit entry
-  const [editingEntryKey, setEditingEntryKey] = useState<string | null>(null); // `${menuId}:${entryId}`
+  const [editingEntryKey, setEditingEntryKey] = useState<string | null>(null);
   const [editEntryForm, setEditEntryForm] = useState<EntryForm>(EMPTY_ENTRY_FORM);
+  const [viewMode, setViewMode] = useState<Record<string, 'list' | 'calendar'>>({});
 
   useEffect(() => {
     getMenus().then(setMenus).catch(console.error);
@@ -79,6 +218,9 @@ export const Menus = () => {
   const addEntryFormFor = (menuId: string): EntryForm => addEntryForms[menuId] ?? EMPTY_ENTRY_FORM;
   const setAddEntryForm = (menuId: string, patch: Partial<EntryForm>) =>
     setAddEntryForms((prev) => ({ ...prev, [menuId]: { ...addEntryFormFor(menuId), ...patch } }));
+  const getViewMode = (menuId: string) => viewMode[menuId] ?? 'list';
+  const setMenuViewMode = (menuId: string, mode: 'list' | 'calendar') =>
+    setViewMode((prev) => ({ ...prev, [menuId]: mode }));
 
   // --- Menu CRUD ---
 
@@ -213,6 +355,7 @@ export const Menus = () => {
         const isEditingMenu = editingMenuId === menu.id;
         const entryForm = addEntryFormFor(menu.id);
         const sortedEntries = [...(menu.entries ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+        const mode = getViewMode(menu.id);
 
         return (
           <Accordion key={menu.id} disableGutters>
@@ -268,8 +411,28 @@ export const Menus = () => {
                 </Box>
               )}
 
-              {/* Entry list */}
-              {sortedEntries.length > 0 && (
+              {/* View toggle */}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={mode}
+                  onChange={(_, v) => { if (v) setMenuViewMode(menu.id, v); }}
+                >
+                  <ToggleButton value="list"><ListIcon fontSize="small" /></ToggleButton>
+                  <ToggleButton value="calendar"><CalendarMonthIcon fontSize="small" /></ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+
+              {/* Calendar view */}
+              {mode === 'calendar' && (
+                <Box sx={{ mb: 2 }}>
+                  <MenuCalendar menu={menu} meals={meals} />
+                </Box>
+              )}
+
+              {/* List view */}
+              {mode === 'list' && sortedEntries.length > 0 && (
                 <List dense disablePadding sx={{ mb: 1 }}>
                   {sortedEntries.map((entry) => {
                     const key = `${menu.id}:${entry.id}`;
