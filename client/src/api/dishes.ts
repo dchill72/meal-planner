@@ -27,6 +27,7 @@ export type Measure = (typeof MEASURES)[number]['value'];
 export interface DishIngredient {
   id: string;
   ingredientId: string;
+  variation: string;
   amount: number;
   measure: Measure;
 }
@@ -34,6 +35,7 @@ export interface DishIngredient {
 export interface Dish {
   id: string;
   name: string;
+  serves: number;
   instructions: string;
   source: string;
   ingredients: DishIngredient[];
@@ -48,6 +50,7 @@ export const getDishes = async (): Promise<Dish[]> => {
 
 export const createDish = async (
   name: string,
+  serves = 0,
   instructions = '',
   source = '',
 ): Promise<Dish> => {
@@ -55,7 +58,7 @@ export const createDish = async (
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, instructions, source }),
+    body: JSON.stringify({ name, serves, instructions, source }),
   });
   if (!res.ok) throw new Error('Failed to create dish');
   const { data } = await res.json();
@@ -65,6 +68,7 @@ export const createDish = async (
 export const updateDish = async (
   id: string,
   name: string,
+  serves = 0,
   instructions = '',
   source = '',
 ): Promise<void> => {
@@ -72,7 +76,7 @@ export const updateDish = async (
     method: 'PUT',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, instructions, source }),
+    body: JSON.stringify({ name, serves, instructions, source }),
   });
   if (!res.ok) throw new Error('Failed to update dish');
 };
@@ -88,6 +92,7 @@ export const deleteDish = async (id: string): Promise<void> => {
 export const addDishIngredient = async (
   dishId: string,
   ingredientId: string,
+  variation: string,
   amount: number,
   measure: Measure,
 ): Promise<DishIngredient> => {
@@ -95,7 +100,7 @@ export const addDishIngredient = async (
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ingredientId, amount, measure }),
+    body: JSON.stringify({ ingredientId, variation, amount, measure }),
   });
   if (!res.ok) throw new Error('Failed to add ingredient to dish');
   const { data } = await res.json();

@@ -62,6 +62,13 @@ func main() {
 	r.HandleFunc("/dishes/{id}/ingredients", app.AddDishIngredient).Methods("POST")
 	r.HandleFunc("/dishes/{id}/ingredients/{entryId}", app.RemoveDishIngredient).Methods("DELETE")
 
+	r.HandleFunc("/meals", app.GetMeals).Methods("GET")
+	r.HandleFunc("/meals", app.CreateMeal).Methods("POST")
+	r.HandleFunc("/meals/{id}", app.UpdateMeal).Methods("PUT")
+	r.HandleFunc("/meals/{id}", app.DeleteMeal).Methods("DELETE")
+	r.HandleFunc("/meals/{id}/dishes", app.AddMealDish).Methods("POST")
+	r.HandleFunc("/meals/{id}/dishes/{dishId}", app.RemoveMealDish).Methods("DELETE")
+
 	log.Printf("[server]: Server is running at http://localhost:%s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, corsMiddleware(cfg.CORSOrigin, r)))
 }

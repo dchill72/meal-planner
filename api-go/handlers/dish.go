@@ -37,9 +37,12 @@ const (
 
 // DishIngredient is a single ingredient entry within a Dish, stored as a
 // sub-document. Each entry has its own _id so it can be individually removed.
+// Variation is optional — it records which variant of the ingredient is used
+// (e.g. "Salted" for Butter), matching a value from Ingredient.Variations.
 type DishIngredient struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	IngredientID primitive.ObjectID `json:"ingredientId" bson:"ingredientId"`
+	Variation    string             `json:"variation" bson:"variation"`
 	Amount       float64            `json:"amount" bson:"amount"`
 	Measure      Measure            `json:"measure" bson:"measure"`
 }
@@ -47,6 +50,7 @@ type DishIngredient struct {
 type Dish struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Name         string             `json:"name" bson:"name"`
+	Serves       int                `json:"serves" bson:"serves"`
 	Instructions string             `json:"instructions" bson:"instructions"`
 	Source       string             `json:"source" bson:"source"`
 	Ingredients  []DishIngredient   `json:"ingredients" bson:"ingredients"`
@@ -80,10 +84,11 @@ func (a *App) GetDishes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"data": dishes})
 }
 
-// CreateDish handles POST /dishes — body: {name, instructions?, source?}
+// CreateDish handles POST /dishes — body: {name, serves?, instructions?, source?}
 func (a *App) CreateDish(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Name         string `json:"name"`
+		Serves       int    `json:"serves"`
 		Instructions string `json:"instructions"`
 		Source       string `json:"source"`
 	}
@@ -99,6 +104,7 @@ func (a *App) CreateDish(w http.ResponseWriter, r *http.Request) {
 	dish := Dish{
 		ID:           primitive.NewObjectID(),
 		Name:         body.Name,
+		Serves:       body.Serves,
 		Instructions: body.Instructions,
 		Source:       body.Source,
 		Ingredients:  []DishIngredient{},
@@ -120,7 +126,7 @@ func (a *App) CreateDish(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"data": dish})
 }
 
-// UpdateDish handles PUT /dishes/{id} — body: {name, instructions?, source?}
+// UpdateDish handles PUT /dishes/{id} — body: {name, serves?, instructions?, source?}
 func (a *App) UpdateDish(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	objID, err := primitive.ObjectIDFromHex(id)
@@ -131,6 +137,7 @@ func (a *App) UpdateDish(w http.ResponseWriter, r *http.Request) {
 
 	var body struct {
 		Name         string `json:"name"`
+		Serves       int    `json:"serves"`
 		Instructions string `json:"instructions"`
 		Source       string `json:"source"`
 	}
@@ -152,7 +159,7 @@ func (a *App) UpdateDish(w http.ResponseWriter, r *http.Request) {
 	_, err = database.Collection("dishes").UpdateOne(
 		context.Background(),
 		bson.M{"_id": objID},
-		bson.M{"$set": bson.M{"name": body.Name, "instructions": body.Instructions, "source": body.Source}},
+		bson.M{"$set": bson.M{"name": body.Name, "serves": body.Serves, "instructions": body.Instructions, "source": body.Source}},
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -196,6 +203,7 @@ func (a *App) AddDishIngredient(w http.ResponseWriter, r *http.Request) {
 
 	var body struct {
 		IngredientID string  `json:"ingredientId"`
+		Variation    string  `json:"variation"`
 		Amount       float64 `json:"amount"`
 		Measure      Measure `json:"measure"`
 	}
@@ -221,6 +229,7 @@ func (a *App) AddDishIngredient(w http.ResponseWriter, r *http.Request) {
 	entry := DishIngredient{
 		ID:           primitive.NewObjectID(),
 		IngredientID: ingredientID,
+		Variation:    body.Variation,
 		Amount:       body.Amount,
 		Measure:      body.Measure,
 	}

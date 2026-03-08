@@ -11,9 +11,29 @@ import (
 	"meal-planner-api/db"
 )
 
+// StoreArea represents a section of the grocery store, used to group the
+// grocery list for efficient shopping.
+type StoreArea string
+
+const (
+	StoreAreaProduce    StoreArea = "Produce"
+	StoreAreaDairy      StoreArea = "Dairy"
+	StoreAreaMeat       StoreArea = "Meat & Seafood"
+	StoreAreaBakery     StoreArea = "Bakery"
+	StoreAreaPantry     StoreArea = "Pantry"
+	StoreAreaFrozen     StoreArea = "Frozen"
+	StoreAreaBeverages  StoreArea = "Beverages"
+	StoreAreaCondiments StoreArea = "Condiments"
+	StoreAreaSpices     StoreArea = "Spices"
+	StoreAreaDeli       StoreArea = "Deli"
+	StoreAreaOther      StoreArea = "Other"
+)
+
 type Ingredient struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Description string             `json:"description" bson:"description"`
+	Variations  []string           `json:"variations" bson:"variations"`
+	StoreArea   StoreArea          `json:"storeArea" bson:"storeArea"`
 }
 
 // GetIngredients handles GET /ingredients
@@ -44,10 +64,12 @@ func (a *App) GetIngredients(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"data": items})
 }
 
-// CreateIngredient handles POST /ingredients
+// CreateIngredient handles POST /ingredients — body: {description, variations?, storeArea?}
 func (a *App) CreateIngredient(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Description string `json:"description"`
+		Description string    `json:"description"`
+		Variations  []string  `json:"variations"`
+		StoreArea   StoreArea `json:"storeArea"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -57,10 +79,15 @@ func (a *App) CreateIngredient(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "description is required", http.StatusBadRequest)
 		return
 	}
+	if body.Variations == nil {
+		body.Variations = []string{}
+	}
 
 	ingredient := Ingredient{
 		ID:          primitive.NewObjectID(),
 		Description: body.Description,
+		Variations:  body.Variations,
+		StoreArea:   body.StoreArea,
 	}
 
 	database, err := db.GetDB()
@@ -79,7 +106,7 @@ func (a *App) CreateIngredient(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"data": ingredient})
 }
 
-// UpdateIngredient handles PUT /ingredients/{id}
+// UpdateIngredient handles PUT /ingredients/{id} — body: {description, variations?, storeArea?}
 func (a *App) UpdateIngredient(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	objID, err := primitive.ObjectIDFromHex(id)
@@ -89,7 +116,9 @@ func (a *App) UpdateIngredient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Description string `json:"description"`
+		Description string    `json:"description"`
+		Variations  []string  `json:"variations"`
+		StoreArea   StoreArea `json:"storeArea"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -98,6 +127,9 @@ func (a *App) UpdateIngredient(w http.ResponseWriter, r *http.Request) {
 	if body.Description == "" {
 		http.Error(w, "description is required", http.StatusBadRequest)
 		return
+	}
+	if body.Variations == nil {
+		body.Variations = []string{}
 	}
 
 	database, err := db.GetDB()
@@ -109,7 +141,11 @@ func (a *App) UpdateIngredient(w http.ResponseWriter, r *http.Request) {
 	_, err = database.Collection("ingredients").UpdateOne(
 		context.Background(),
 		bson.M{"_id": objID},
-		bson.M{"$set": bson.M{"description": body.Description}},
+		bson.M{"$set": bson.M{
+			"description": body.Description,
+			"variations":  body.Variations,
+			"storeArea":   body.StoreArea,
+		}},
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

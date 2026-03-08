@@ -3,9 +3,10 @@
         client-install client-build client-start client-test \
         docker-build docker-api-build docker-client-build \
         docker-up docker-down docker-mongo-up docker-mongo-down \
+        docker-restart \
         help
 
-COMPOSE = env $(shell sed 's/^export //' .envrc | grep -v '^\#' | grep '=') docker-compose
+COMPOSE = env $(shell sed 's/^export //' .envrc | grep -v '^#' | grep '=') docker-compose
 
 # ─── Top-level aliases ────────────────────────────────────────────────────────
 
@@ -74,6 +75,8 @@ docker-mongo-up:
 docker-mongo-down:
 	$(COMPOSE) stop mongo
 
+docker-restart: docker-down docker-build docker-up
+
 # ─── Help ─────────────────────────────────────────────────────────────────────
 
 help:
@@ -108,4 +111,5 @@ help:
 	@echo "  docker-down        Stop all containers"
 	@echo "  docker-mongo-up    Start MongoDB only"
 	@echo "  docker-mongo-down  Stop MongoDB"
+	@echo "  docker-restart     Stop, rebuild all images, and restart"
 	@echo ""

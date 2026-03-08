@@ -33,19 +33,44 @@ import {
 } from '../api/dishes';
 import { Ingredient, getIngredients } from '../api/ingredients';
 
-interface AddIngredientForm {
+interface IngredientOption {
+  key: string;         // composite select value: "{ingredientId}::{variation}"
   ingredientId: string;
+  variation: string;
+  label: string;       // "Butter" or "Butter: Salted"
+}
+
+interface AddIngredientForm {
+  optionKey: string;
   amount: string;
   measure: Measure;
 }
 
 interface EditDishForm {
   name: string;
+  serves: string;
   instructions: string;
   source: string;
 }
 
-const DEFAULT_ADD_FORM: AddIngredientForm = { ingredientId: '', amount: '', measure: 'count' };
+const DEFAULT_ADD_FORM: AddIngredientForm = { optionKey: '', amount: '', measure: 'count' };
+
+const buildOptions = (ingredients: Ingredient[]): IngredientOption[] =>
+  ingredients.flatMap((ing) => {
+    const base: IngredientOption = {
+      key: `${ing.id}::`,
+      ingredientId: ing.id,
+      variation: '',
+      label: ing.description,
+    };
+    const vars: IngredientOption[] = (ing.variations ?? []).map((v) => ({
+      key: `${ing.id}::${v}`,
+      ingredientId: ing.id,
+      variation: v,
+      label: `${ing.description}: ${v}`,
+    }));
+    return [base, ...vars];
+  });
 
 export const Dishes = () => {
   const [dishes, setDishes] = useState<Dish[]>([]);
@@ -53,20 +78,26 @@ export const Dishes = () => {
   const [newDishName, setNewDishName] = useState('');
   const [addForms, setAddForms] = useState<Record<string, AddIngredientForm>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<EditDishForm>({ name: '', instructions: '', source: '' });
+  const [editForm, setEditForm] = useState<EditDishForm>({ name: '', serves: '', instructions: '', source: '' });
 
   useEffect(() => {
     getDishes().then(setDishes).catch(console.error);
     getIngredients().then(setIngredients).catch(console.error);
   }, []);
 
-  const ingredientName = (id: string) =>
-    ingredients.find((i) => i.id === id)?.description ?? id;
+  const options = buildOptions(ingredients);
 
   const addFormFor = (dishId: string): AddIngredientForm => addForms[dishId] ?? DEFAULT_ADD_FORM;
 
   const setAddForm = (dishId: string, patch: Partial<AddIngredientForm>) =>
     setAddForms((prev) => ({ ...prev, [dishId]: { ...addFormFor(dishId), ...patch } }));
+
+  const formatEntry = (entry: DishIngredient) => {
+    const ing = ingredients.find((i) => i.id === entry.ingredientId);
+    const name = ing?.description ?? entry.ingredientId;
+    const label = entry.variation ? `${name}: ${entry.variation}` : name;
+    return `${entry.amount} ${entry.measure === 'count' ? '×' : entry.measure}  ${label}`;
+  };
 
   const handleCreateDish = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +115,15 @@ export const Dishes = () => {
 
   const startEdit = (dish: Dish) => {
     setEditingId(dish.id);
-    setEditForm({ name: dish.name, instructions: dish.instructions, source: dish.source });
+    setEditForm({ name: dish.name, serves: dish.serves ? String(dish.serves) : '', instructions: dish.instructions, source: dish.source });
   };
 
   const handleSaveEdit = async (id: string) => {
-    await updateDish(id, editForm.name, editForm.instructions, editForm.source);
+    const serves = parseInt(editForm.serves) || 0;
+    await updateDish(id, editForm.name, serves, editForm.instructions, editForm.source);
     setDishes((prev) =>
       prev.map((d) =>
-        d.id === id ? { ...d, name: editForm.name, instructions: editForm.instructions, source: editForm.source } : d,
+        d.id === id ? { ...d, name: editForm.name, serves, instructions: editForm.instructions, source: editForm.source } : d,
       ),
     );
     setEditingId(null);
@@ -101,9 +133,10 @@ export const Dishes = () => {
     e.preventDefault();
     const form = addFormFor(dishId);
     const amount = parseFloat(form.amount);
-    if (!form.ingredientId || isNaN(amount) || amount <= 0) return;
+    if (!form.optionKey || isNaN(amount) || amount <= 0) return;
 
-    const entry = await addDishIngredient(dishId, form.ingredientId, amount, form.measure);
+    const [ingredientId, variation] = form.optionKey.split('::');
+    const entry = await addDishIngredient(dishId, ingredientId, variation, amount, form.measure);
     setDishes((prev) =>
       prev.map((d) =>
         d.id === dishId ? { ...d, ingredients: [...d.ingredients, entry] } : d,
@@ -122,9 +155,6 @@ export const Dishes = () => {
       ),
     );
   };
-
-  const formatEntry = (entry: DishIngredient) =>
-    `${entry.amount} ${entry.measure === 'count' ? '×' : entry.measure}  ${ingredientName(entry.ingredientId)}`;
 
   return (
     <Box>
@@ -149,7 +179,7 @@ export const Dishes = () => {
       {dishes.map((dish) => {
         const form = addFormFor(dish.id);
         const amountNum = parseFloat(form.amount);
-        const canAddIngredient = form.ingredientId && !isNaN(amountNum) && amountNum > 0;
+        const canAddIngredient = form.optionKey && !isNaN(amountNum) && amountNum > 0;
         const isEditing = editingId === dish.id;
 
         return (
@@ -166,13 +196,21 @@ export const Dishes = () => {
 
             <AccordionDetails>
               {isEditing ? (
-                /* ── Edit mode ── */
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
                   <TextField
                     size="small"
                     label="Name"
                     value={editForm.name}
                     onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                  />
+                  <TextField
+                    size="small"
+                    label="Serves"
+                    type="number"
+                    value={editForm.serves}
+                    onChange={(e) => setEditForm((f) => ({ ...f, serves: e.target.value }))}
+                    inputProps={{ min: 0, step: 1 }}
+                    sx={{ width: 100 }}
                   />
                   <TextField
                     size="small"
@@ -203,19 +241,19 @@ export const Dishes = () => {
                   </Box>
                 </Box>
               ) : (
-                /* ── View mode ── */
                 <>
+                  {dish.serves > 0 && (
+                    <Typography variant="body2" color="text.secondary" mb={1}>
+                      Serves {dish.serves}
+                    </Typography>
+                  )}
                   {dish.source && (
                     <Link href={dish.source} target="_blank" rel="noopener noreferrer" display="block" mb={1}>
                       {dish.source}
                     </Link>
                   )}
                   {dish.instructions && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ whiteSpace: 'pre-wrap', mb: 2 }}
-                    >
+                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
                       {dish.instructions}
                     </Typography>
                   )}
@@ -232,11 +270,7 @@ export const Dishes = () => {
                       key={entry.id}
                       disableGutters
                       secondaryAction={
-                        <IconButton
-                          edge="end"
-                          size="small"
-                          onClick={() => handleRemoveIngredient(dish.id, entry.id)}
-                        >
+                        <IconButton edge="end" size="small" onClick={() => handleRemoveIngredient(dish.id, entry.id)}>
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       }
@@ -256,16 +290,17 @@ export const Dishes = () => {
                 <Select
                   size="small"
                   displayEmpty
-                  value={form.ingredientId}
-                  onChange={(e) => setAddForm(dish.id, { ingredientId: e.target.value })}
-                  sx={{ minWidth: 160 }}
-                  renderValue={(v) =>
-                    v ? ingredientName(v) : <Typography color="text.secondary">Ingredient</Typography>
-                  }
+                  value={form.optionKey}
+                  onChange={(e) => setAddForm(dish.id, { optionKey: e.target.value })}
+                  sx={{ minWidth: 200 }}
+                  renderValue={(v) => {
+                    const opt = options.find((o) => o.key === v);
+                    return opt ? opt.label : <Typography color="text.secondary">Ingredient</Typography>;
+                  }}
                 >
-                  {ingredients.map((ing) => (
-                    <MenuItem key={ing.id} value={ing.id}>
-                      {ing.description}
+                  {options.map((opt) => (
+                    <MenuItem key={opt.key} value={opt.key} sx={{ pl: opt.variation ? 4 : 2 }}>
+                      {opt.label}
                     </MenuItem>
                   ))}
                 </Select>
