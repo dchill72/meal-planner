@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { PaletteMode } from '@mui/material';
+import { useThemeCtx } from './ThemeContext';
+import { API_BASE } from '../api/client';
 
 export interface User {
   name: string;
   email: string;
   picture: string;
+  theme?: PaletteMode;
 }
 
 interface AuthContextType {
@@ -25,17 +29,27 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { setMode } = useThemeCtx();
+
+  const applyTheme = (u: User) => {
+    if (u.theme) setMode(u.theme);
+  };
 
   useEffect(() => {
-    fetch('http://localhost:8000/me', { credentials: 'include' })
+    fetch(`${API_BASE}/me`, { credentials: 'include' })
       .then((res) => res.json())
-      .then((data) => { if (data?.email) setUser(data); })
+      .then((data) => {
+        if (data?.email) {
+          setUser(data);
+          applyTheme(data);
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (token: string) => {
-    const res = await fetch('http://localhost:8000/auth/google', {
+    const res = await fetch(`${API_BASE}/auth/google`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -47,11 +61,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
     const data = await res.json();
-    if (data?.email) setUser(data);
+    if (data?.email) {
+      setUser(data);
+      applyTheme(data);
+    }
   };
 
   const logout = async () => {
-    await fetch('http://localhost:8000/auth/logout', {
+    await fetch(`${API_BASE}/auth/logout`, {
       method: 'POST',
       credentials: 'include',
     });

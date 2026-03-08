@@ -16,6 +16,7 @@ type User struct {
 	Name    string `json:"name" bson:"name"`
 	Email   string `json:"email" bson:"email"`
 	Picture string `json:"picture" bson:"picture"`
+	Theme   string `json:"theme" bson:"theme"`
 }
 
 // AuthMiddleware loads the current user from the session into the request context.
@@ -128,7 +129,8 @@ func (a *App) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Name string `json:"name"`
+		Name  string `json:"name"`
+		Theme string `json:"theme"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -141,10 +143,15 @@ func (a *App) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	update := bson.M{"name": body.Name}
+	if body.Theme != "" {
+		update["theme"] = body.Theme
+	}
+
 	_, err = database.Collection("auth").UpdateOne(
 		context.Background(),
 		bson.M{"email": user.Email},
-		bson.M{"$set": bson.M{"name": body.Name}},
+		bson.M{"$set": update},
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -152,5 +159,5 @@ func (a *App) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"name": body.Name})
+	json.NewEncoder(w).Encode(map[string]string{"name": body.Name, "theme": body.Theme})
 }

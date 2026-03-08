@@ -1,10 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Divider, Paper, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Divider,
+  Paper,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import { useThemeCtx } from '../context/ThemeContext';
+import { API_BASE } from '../api/client';
 
 export const Profile = () => {
   const { user, loading, login, logout, updateUser } = useAuth();
+  const { mode, setMode } = useThemeCtx();
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -22,16 +36,19 @@ export const Profile = () => {
     );
   }
 
+  const hasChanges = name !== user.name || mode !== (user.theme ?? 'light');
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch('http://localhost:8000/me', {
+      await fetch(`${API_BASE}/me`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, theme: mode }),
       });
-      updateUser({ name });
+      setMode(mode);
+      updateUser({ name, theme: mode });
     } finally {
       setSaving(false);
     }
@@ -49,10 +66,28 @@ export const Profile = () => {
           onChange={(e) => setName(e.target.value)}
           fullWidth
         />
+        <Box>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Theme
+          </Typography>
+          <ToggleButtonGroup
+            exclusive
+            value={mode}
+            onChange={(_, v) => { if (v) setMode(v); }}
+            size="small"
+          >
+            <ToggleButton value="light">
+              <Brightness7Icon fontSize="small" sx={{ mr: 0.5 }} /> Light
+            </ToggleButton>
+            <ToggleButton value="dark">
+              <Brightness4Icon fontSize="small" sx={{ mr: 0.5 }} /> Dark
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={saving || name === user.name}
+          disabled={saving || !hasChanges}
         >
           {saving ? 'Saving…' : 'Save'}
         </Button>
