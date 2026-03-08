@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import {
   Box,
+  Button,
   Divider,
   MenuItem,
   Select,
   Typography,
 } from '@mui/material';
+import PrintIcon from '@mui/icons-material/Print';
 import { getMenus, Menu } from '../api/menus';
 import { GroceryLine, getGroceryList } from '../api/grocery';
 
@@ -59,44 +61,67 @@ export const GroceryList = () => {
     }
   };
 
+  const selectedMenu = menus.find((m) => m.id === selectedMenuId);
   const grouped = lines ? groupByArea(lines) : null;
 
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
-        Grocery List
-      </Typography>
-
-      <Select
-        size="small"
-        displayEmpty
-        value={selectedMenuId}
-        onChange={(e) => handleMenuChange(e.target.value)}
-        sx={{ minWidth: 240, mb: 3 }}
-        renderValue={(v) => {
-          const m = menus.find((x) => x.id === v);
-          return m ? m.name : <Typography color="text.secondary">Select a menu…</Typography>;
-        }}
-      >
-        {menus.map((m) => (
-          <MenuItem key={m.id} value={m.id}>
-            {m.name}
-          </MenuItem>
-        ))}
-      </Select>
+      {/* Screen header */}
+      <Box className="no-print" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+        <Typography variant="h5">Grocery List</Typography>
+        <Select
+          size="small"
+          displayEmpty
+          value={selectedMenuId}
+          onChange={(e) => handleMenuChange(e.target.value)}
+          sx={{ minWidth: 240 }}
+          renderValue={(v) => {
+            const m = menus.find((x) => x.id === v);
+            return m ? m.name : <Typography color="text.secondary">Select a menu…</Typography>;
+          }}
+        >
+          {menus.map((m) => (
+            <MenuItem key={m.id} value={m.id}>
+              {m.name}
+            </MenuItem>
+          ))}
+        </Select>
+        {grouped && grouped.size > 0 && (
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<PrintIcon />}
+            onClick={() => window.print()}
+          >
+            Print
+          </Button>
+        )}
+      </Box>
 
       {loading && (
-        <Typography variant="body2" color="text.secondary">Loading…</Typography>
+        <Typography variant="body2" color="text.secondary" className="no-print">
+          Loading…
+        </Typography>
       )}
 
       {!loading && grouped && grouped.size === 0 && (
-        <Typography variant="body2" color="text.disabled">
+        <Typography variant="body2" color="text.disabled" className="no-print">
           No ingredients found. Make sure the menu has entries with meals that contain dishes with ingredients.
         </Typography>
       )}
 
       {!loading && grouped && grouped.size > 0 && (
         <Box>
+          {/* Print-only title */}
+          <Box sx={{ display: 'none', '@media print': { display: 'block' }, mb: 2 }}>
+            <Typography variant="h5">Grocery List</Typography>
+            {selectedMenu && (
+              <Typography variant="subtitle1" color="text.secondary">
+                {selectedMenu.name}
+              </Typography>
+            )}
+          </Box>
+
           {Array.from(grouped.entries()).map(([area, areaLines], i) => (
             <Box key={area}>
               {i > 0 && <Divider sx={{ my: 2 }} />}

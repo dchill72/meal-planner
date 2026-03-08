@@ -11,3 +11,39 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@media print {
+  /* Hide chrome */
+  header,
+  .MuiDrawer-root,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Main content takes full page width */
+  main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Remove container padding */
+  .MuiContainer-root {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  /* Hide the AppBar spacer toolbar */
+  main > .MuiToolbar-root:first-child {
+    display: none !important;
+  }
+
+  /* Clean typography for print */
+  body {
+    color: black !important;
+    background: white !important;
+  }
+}

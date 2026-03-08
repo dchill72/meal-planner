@@ -58,7 +58,7 @@ Derived from a menu. All ingredients across all dishes across all meals are aggr
 | Menu entries (date, headcount, cook) | ✅ | ✅ |
 | Menu calendar view | ✅ | ✅ |
 | Grocery list generation | ✅ | ✅ |
-| Grocery list printing | ⬜ | ⬜ |
+| Grocery list printing | ⬜ | ✅ |
 | MCP server | ⬜ | ⬜ |
 
 ---
